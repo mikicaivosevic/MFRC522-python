@@ -5,6 +5,23 @@ import RPi.GPIO as GPIO
 import spi
 import signal
 import time
+
+MIFARE_CLASSIC_1K_KEYS = [
+    [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF],
+    [0x00, 0x11, 0x22, 0x33, 0x44, 0x55],
+    [0x00, 0x01, 0x02, 0x03, 0x04, 0x05],
+    [0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5],
+    [0xB0, 0xB1, 0xB2, 0xB3, 0xB4, 0xB5],
+    [0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA],
+    [0xBB, 0xBB, 0xBB, 0xBB, 0xBB, 0xBB],
+    [0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF],
+    [0XD3, 0XF7, 0XD3, 0XF7, 0XD3, 0XF7],
+    [0XB0, 0XB1, 0XB2, 0XB3, 0XB4, 0XB5],
+    [0X4D, 0X3A, 0X99, 0XC3, 0X51, 0XDD],
+    [0X1A, 0X98, 0X2C, 0X7E, 0X45, 0X9A],
+    [0X00, 0X00, 0X00, 0X00, 0X00, 0X00],
+    [0XAB, 0XCD, 0XEF, 0X12, 0X34, 0X56]
+]
   
 class MFRC522:
   NRSTPD = 22
@@ -318,9 +335,9 @@ class MFRC522:
 
     # Check if an error occurred
     if not(status == self.MI_OK):
-      print "AUTH ERROR!!"
+      return self.MI_ERR
     if not (self.Read_MFRC522(self.Status2Reg) & 0x08) != 0:
-      print "AUTH ERROR(status2reg & 0x08) != 0"
+      return self.MI_ERR
 
     # Return the status
     return status
@@ -337,10 +354,11 @@ class MFRC522:
     recvData.append(pOut[1])
     (status, backData, backLen) = self.MFRC522_ToCard(self.PCD_TRANSCEIVE, recvData)
     if not(status == self.MI_OK):
-      print "Error while reading!"
+      return None
     i = 0
     if len(backData) == 16:
-      print "Sector "+str(blockAddr)+" "+str(backData)
+        return {'sector': str(blockAddr), 'data': str(backData)}
+    return None
   
   def MFRC522_Write(self, blockAddr, writeData):
     buff = []
